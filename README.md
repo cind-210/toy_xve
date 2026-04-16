@@ -12,6 +12,27 @@ This toy project compares `x-pred`, `e-pred`, and `v-pred` under the same `v-los
 5. Trains a 5-layer ReLU MLP (width 256, plus input/output linear adapters) for each pred type (`x/e/v`), always with `v-loss`.
 6. Samples in high-dim, maps generated points back to 2D via `P^T y`, and saves plots.
 
+## `k` / `h` options in `--pred_types`
+
+`--pred_types` supports not only `x,e,v`, but also `k=<float>` and `h=<float>`.
+
+- `k=<float>`:
+  - Treated as `v-pred` with an extra subtraction term.
+  - Formula:
+    - `f_t = max(0, k*t + 1)`
+    - `v <- v - (z/(1-t))*f_t`
+
+- `h=<float>`:
+  - Also treated as `v-pred` with a different decay-style subtraction term.
+  - Formula:
+    - `f_t = exp(ln(0.01) * t / h)`
+    - `v <- v - (z/(1-t))*f_t`
+  - `h` must be non-zero.
+
+Difference:
+- `k` gives a linear gate (`max(0, k*t+1)`), often more abrupt depending on `k`.
+- `h` gives an exponential schedule, typically smoother over time.
+
 ## Run
 
 ```bash
@@ -19,7 +40,7 @@ python toy/train_toy_spiral.py \
   --num_points 1024 \
   --noise_std 0.02 \
   --high_dim 64 \
-  --pred_types x,e,v \
+  --pred_types x,e,v,k=0,h=0.3 \
   --epochs 4000 \
   --batch_size 256 \
   --sample_steps 100 \
