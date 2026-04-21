@@ -7,7 +7,7 @@ This project is a small experimental framework built around a 5-layer ReLU MLP f
 For 2D spiral-distributed data embedded in a high-dimensional space:
 + `x-pred` fits well while simply keeping **`noise_scale=1.0`**. 
 + `v-pred` requires more careful `noise_scale` design; the exact best formula is still unknown, but keeping **`SNR=1.0`** yields a `noise_scale` in the same order of magnitude as the best one. Its best performance is slightly worse than `x-pred`, but it can still fit the data well. We also provide a reference list in [best_ns.md](best_ns.md).
-+ `e-pred` performs poorly under all tested `noise_scale` settings.
++ `e-pred` can achieve reasonably good performance when **`SNR=0.1`** is maintained, but it still fails completely once the dimension becomes too high.
 
 You can reproduce the figures above with:
 
@@ -72,8 +72,8 @@ python train.py \
 
 `--noise_scale` modes:
 
-- `auto`: `v-pred` uses the `var`-based estimated noise scale, while `x-pred` and `e-pred` both use `1.0`
-- `best`: `x-pred` and `e-pred` behave the same as `auto`, while `v-pred` uses a hard-coded lookup table derived from `best_ns.md`
+- `auto`: `x-pred` uses `1.0`, `e-pred` uses `0.1 * sqrt(var_total / high_dim)`, and `v-pred` uses the `var`-based estimated noise scale
+- `best`: `x-pred` uses `1.0`, `e-pred` uses `0.1 * sqrt(var_total / high_dim)`, and `v-pred` uses a hard-coded lookup table derived from `best_ns.md`
 - `e`: `noise_scale = sqrt(E / high_dim)`, where `E = mean(||X||^2)`
 - `var`: `noise_scale = sqrt(var_total / high_dim)`, where `var_total` is the sum of per-dimension variances
 - numeric value or numeric list: use the provided fixed noise scale directly

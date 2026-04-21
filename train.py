@@ -125,9 +125,19 @@ def build_col_labels(col_templates: List[Dict[str, object]]) -> Tuple[Dict[str, 
         noise_value = template["noise_value"]
         col_titles[cid] = f"{pred_type}-pred"
         if noise_mode == "auto":
-            col_ns_labels[cid] = "ns=var(auto)" if pred_type == "v" else "ns=1.0(auto)"
+            if pred_type == "v":
+                col_ns_labels[cid] = "ns=var(auto)"
+            elif pred_type == "e":
+                col_ns_labels[cid] = "ns=0.1var(auto)"
+            else:
+                col_ns_labels[cid] = "ns=1.0(auto)"
         elif noise_mode == "best":
-            col_ns_labels[cid] = "ns=best" if pred_type == "v" else "ns=1.0(best)"
+            if pred_type == "v":
+                col_ns_labels[cid] = "ns=best"
+            elif pred_type == "e":
+                col_ns_labels[cid] = "ns=0.1var(best)"
+            else:
+                col_ns_labels[cid] = "ns=1.0(best)"
         elif noise_mode == "fixed" and noise_value is not None:
             col_ns_labels[cid] = f"ns={float(noise_value):g}"
         elif noise_mode in ("e", "var"):
@@ -212,6 +222,9 @@ def resolve_run_noise(
     if noise_mode == "auto":
         if pred_type == "v":
             return var_noise_scale, f"ns={var_noise_scale:.4g},var={var_total:.4g}"
+        if pred_type == "e":
+            run_noise_scale = 0.1 * var_noise_scale
+            return run_noise_scale, f"ns={run_noise_scale:.4g},0.1var={var_total:.4g}"
         return 1.0, "ns=1(auto)"
     if noise_mode == "best":
         if pred_type == "v":
@@ -222,6 +235,9 @@ def resolve_run_noise(
                 )
             best_noise_scale = float(BEST_NOISE_SCALE_BY_HIGH_DIM[high_dim])
             return best_noise_scale, "ns=best"
+        if pred_type == "e":
+            run_noise_scale = 0.1 * var_noise_scale
+            return run_noise_scale, f"ns={run_noise_scale:.4g},0.1var={var_total:.4g}"
         return 1.0, "ns=1(best)"
     if noise_mode == "e":
         return e_noise_scale, f"ns={e_noise_scale:.4g},E={e_energy:.4g}"
